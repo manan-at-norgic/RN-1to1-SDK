@@ -1,5 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {Button, View, Text} from 'react-native';
+import {RTCView} from 'react-native-vdotok-streaming';
 // import axios from 'axios';
 
 import {Client} from 'react-native-vdotok-streaming';
@@ -7,14 +8,14 @@ import {Client} from 'react-native-vdotok-streaming';
 const MyButton = () => {
   const [number, setNumber] = useState(0);
   const [user, setUser] = useState({
-    auth_token: '37ac384b28a20006c044eb11fe47ec60',
-    authorization_token: '4fc1aeebac34645762bf9110f87c594e',
-    created_datetime: '1686916164',
-    email: 'datamine@test.com',
-    full_name: 'dataMine',
+    auth_token: '545baedaaaafdb006bc68f9aea2a3bf0',
+    authorization_token: '7d4d82d2d8bf5194d905cc1b4a1cc39a',
+    created_datetime: '1686842902',
+    email: 'manan@test.com',
+    full_name: 'Manan',
     media_server_map: {
-      complete_address: 'wss://q-signalling.vdotok.dev:8443/call',
-      end_point: 'call',
+      complete_address: 'wss://q-signalling.vdotok.dev:8443/callV1',
+      end_point: 'callV1',
       host: 'q-signalling.vdotok.dev',
       port: '8443',
       protocol: 'wss',
@@ -26,20 +27,22 @@ const MyButton = () => {
       port: '443',
       protocol: 'wss',
     },
-    phone_num: '923752685633',
-    process_time: 440,
+    phone_num: '923192602920',
+    process_time: 31,
     profile_pic: '',
-    ref_id: '1RN1RP8f0019b9ad6e2a944fee133e93fd178f',
+    ref_id: '1RN1RP9413268c492efb757b5f2feb2934ae31',
     status: 200,
     stun_server_map: {
       complete_address: 'r-stun1.vdotok.dev:3478',
       host: 'r-stun1.vdotok.dev',
       port: '3478',
     },
-    user_id: 22956,
-    username: 'dataMine',
+    user_id: 22393,
+    username: 'Manan',
   });
   const [client, setClient] = useState(null);
+  const [stream, setStream] = useState(null);
+  const [remoteStream, setRemoteStream] = useState(null);
 
   const initializeSDK = () => {
     let sdkInitParam = {
@@ -59,9 +62,30 @@ const MyButton = () => {
 
   const initiateOneToOneCall = () => {
     client.OneToOneCall({
-      to: ['1RN1RP1abce7a1974cee805ea7b869a25becdb'],
+      //data mine2
+      to: ['1RN1RP111213a660d0bd8ad903c6adfc86aa50'],
       type: 'camera',
     });
+
+    client.on('call', res => {
+      if (res.type == 'CALL_RECEIVED') {
+      }
+      if (res.type == 'CALL_ENDED') {
+        console.log(
+          'call endedddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
+        );
+        setStream(null);
+        setRemoteStream(null);
+      }
+      if (res.type == 'MISSED_CALL') {
+        setRemoteStream(null);
+        setStream(null);
+      }
+    });
+  };
+
+  const dissconnectSocket = () => {
+    client.Disconnect();
   };
 
   //onRegister enable camera
@@ -75,6 +99,15 @@ const MyButton = () => {
         //   '================================================',
         // );
         console.log('sdk connected...');
+      });
+      client.on('local_stream', res => {
+        setStream(res.stream);
+      });
+      client.on('remote_stream', res => {
+        setRemoteStream(res.stream);
+      });
+      client.on('error', res => {
+        console.log(res, 'ressssssssssssssssssssssssssssssss');
       });
     }
   }, [client]);
@@ -99,26 +132,82 @@ const MyButton = () => {
   //   }, []);
   return (
     <>
-      <View>
-        <Text>{number}</Text>
-        <Button
-          title="connectSDK"
-          onPress={() => {
-            //   setNumber(number + 1);
-            initializeSDK();
-          }}
-        />
-      </View>
-      <View>
-        <Text>{number}</Text>
-        <Button
-          title="call"
-          onPress={() => {
-            //   setNumber(number + 1);
-            initiateOneToOneCall();
-          }}
-        />
-      </View>
+      {stream !== null ? (
+        <>
+          <View
+            style={{
+              position: 'absolute',
+              height: 170,
+              width: 130,
+              backgroundColor: 'rgba(255,255,255,0.3)',
+              borderRadius: 15,
+              bottom: 100,
+              right: 20,
+              zIndex: 2,
+              overflow: 'hidden',
+            }}>
+            <RTCView
+              zOrder={2}
+              zIndex={2}
+              streamURL={stream.toURL()}
+              style={{
+                height: '100%',
+                width: '100%',
+                zIndex: 2,
+                borderRadius: 15,
+              }}></RTCView>
+          </View>
+          <View
+            style={{
+              position: 'absolute',
+              height: '100%',
+              width: '100%',
+              zIndex: 1,
+            }}>
+            {remoteStream !== null ? (
+              <RTCView
+                objectFit={'cover'}
+                zOrder={1}
+                zIndex={1}
+                streamURL={remoteStream.toURL()}
+                style={{height: '100%', width: '100%', zIndex: 1}}></RTCView>
+            ) : (
+              <Text>remoteStream</Text>
+            )}
+          </View>
+        </>
+      ) : (
+        <>
+          <View>
+            <Text>{number}</Text>
+            <Button
+              title="connectSDK"
+              onPress={() => {
+                //   setNumber(number + 1);
+                initializeSDK();
+              }}
+            />
+          </View>
+          <View>
+            <Text>{number}</Text>
+            <Button
+              title="call"
+              onPress={() => {
+                //   setNumber(number + 1);
+                initiateOneToOneCall();
+              }}
+            />
+          </View>
+          <View>
+            <Text>{number}</Text>
+            <Button
+              title="dissconnect socket"
+              onPress={() => {
+                dissconnectSocket();
+              }}></Button>
+          </View>
+        </>
+      )}
     </>
   );
 };
